@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!----------------------------------------------------------
+	This work is based on magnifying glass of Jean-Marc VIGLINO.
+	https://viglino.github.io/ol-ext/examples/misc/map.overlay.magnify.html
+
+	Copyright (c) 2016-2018 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+------------------------------------------------------------>
+
+	<title>ol-ext: Magnifying glass with shifting opacity </title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="iconic font and scalable vector icons for OL3" />
+	<meta name="keywords" content="ol3, overlay, magnify, glass, zoom, opacity" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+	<!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/master/css/ol.css" />
+	<script type="text/javascript" src="https://openlayers.org/en/master/build/ol.js"></script>
+
+	<!-- ol-ext library created by JM Viglino-->
+	 <link rel="stylesheet" href="http://viglino.github.io/ol-ext/dist/ol-ext.min.css" />
+	<script type="text/javascript" src="http://viglino.github.io/ol-ext/dist/ol-ext.js"></script>
+
+	<link rel="stylesheet" href="http://viglino.github.io/ol-ext/examples/style.css" />
+
+
+	<style>
+		.oview {
+			color: #fff;
+			background: #369;
+			padding: 0.5em;
+			display: inline-block;
+			margin-right: 0.5em;
+		}
+	</style>
+</head>
+<body>
+	<h1> Magnifying glass with shifting opacity </h1>
+	<div class="info">
+		This magnifying glass allows to see the layers you have selected in it. The opacity is shifting so as you can see the different layers.
+		<br/>
+		You can choose the variation speed and the layers you want.
+		<br/>
+		This glass is based on the <a href="https://viglino.github.io/ol-ext/doc/doc-pages/ol.Overlay.Magnify.html">ol.overlay.Magnify</a>
+		which add a "magnifying glass" effect to an OL3 map that displays
+		a portion of the map in a different zoom (and actually display different content). This class was created by
+		<a href="https://github.com/Viglino/ol3-ext">Jean-Marc Viglino.</a>
+		<br/>
+		<a href="https://github.com/"> View code </a>
+		<br/>
+
+
+
+
+	</div>
+
+	<!-- the map -->
+	<div id="map" style="width:600px; height:400px;"></div>
+
+	<div>
+		<div class="oview">
+			External magnify
+			<div class="overview" style="width:150px; height:150px;"></div>
+		</div>
+	</div>
+
+	<div class="options">
+		Zoom offset: <input id="zoom" type="number" value="1" step="0.5" style="width:4em" />
+		<br />
+		Layer:  <!--change the layer when the selection changes-->
+		<input type="checkbox" onchange="setOVLayer(this)" value="0" id="0" checked />
+		<label for="0">OSM</label><br />
+		<input type="checkbox" onchange="setOVLayer(this)" value="1" id="1" checked/>
+		<label for="1">Stamen</label><br />
+
+	<form id="changeOpacity" action="" method="get">
+      Layer shifts:
+      <input type="number" id="chgOpacity" value="60" step="10">
+      by minute.
+    </form>
+
+	</div>
+
+	<script type="text/javascript">
+		// The map
+		var map=new ol.Map
+			({
+				target: 'map',
+				view: new ol.View
+				({	zoom: 15,
+					center: [270148, 6247782]
+				}),
+				layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+			});
+
+		// Layers for the overview
+		var layers2 =
+		[	new ol.layer.Tile({	source: new ol.source.OSM()}),
+			new ol.layer.Tile({	source: new ol.source.Stamen({layer: 'watercolor'})	, opacity:1 })
+		];
+		setOVLayer($(".options input"));
+
+		// New control on the map
+		//magnifying glass on the map
+		var ov = new ol.Overlay.Magnify(
+			{	layers: layers2,
+				zoomOffset: $("#zoom").val()
+			});
+		map.addOverlay(ov);
+
+		//external magnify frame
+		var ov2 = new ol.Overlay.Magnify(
+			{	layers: layers2,
+				target: $(".overview").get(0),
+				zoomOffset: $("#zoom").val()
+			});
+		map.addOverlay(ov2);
+
+
+		// Options changes
+		//set which layers are visible
+var nbcouches = 2;
+
+		function setOVLayer ()
+		{
+			for (i=0; i < nbcouches; i++)
+			{
+				if (document.getElementById(i).checked == true){
+					layers2[i].setVisible(true);
+				}
+				else {
+					layers2[i].setVisible(false);
+				}
+			}
+		}
+
+		//initializing for opacity
+		var croissant = false; // decreasing opacity at the beginning
+		var opacite = layers2[1].get("opacity");
+		var step=0.1 ; // step
+
+		//on change le pas lorsque la valeur choisie est différente
+		var OpacityInput = document.getElementById('chgOpacity');
+		function useValue() {
+			step = 0.1*OpacityInput.value/60;
+		}
+		OpacityInput.oninput = useValue ;
+
+
+
+		//function for shifting opacity
+		function changeOpacity() {
+
+		 //decreasing
+		 if (opacite < 1 && croissant == false && opacite > 0) {
+			 if (opacite>0+step){
+			opacite = opacite - step;}
+			else {opacite = 0; }
+		//increasing
+   } else if (opacite < 1 && croissant == true && opacite > 0 ){
+     if (opacite<1-step){
+     opacite = opacite + step;}
+     else {opacite=1;}
+
+	 } else if (opacite >= 1 ){
+	 croissant = false;
+	 opacite = opacite - step;
+ 		}
+		else if (opacite <= 0){
+			croissant = true;
+			opacite = opacite + step;
+		};
+		 layers2[1].setOpacity(opacite);
+		};
+
+
+	//calling the function 10 times by second
+	setInterval(changeOpacity,100);
+
+
+//click allows to hide the magnifying glass
+//hiding also the magnifying frame allows the matching with the magnifying glass
+$("#map").on("click", function()
+{
+	map.removeOverlay(ov);
+	isVisible=false;
+});
+
+//reclick to make the magnifying glass appears
+$("#map").on("click", function()
+{
+	map.addOverlay(ov2);
+	map.addOverlay(ov);
+	isVisible = true;
+});
+		//change the value of the zoom when changes
+		$("#zoom").on("change", function ()
+		{	ov.set("zoomOffset", Number($("#zoom").val()));
+			ov2.set("zoomOffset", Number($("#zoom").val()));
+		});
+
+
+	</script>
+
+</body>
+</html>
