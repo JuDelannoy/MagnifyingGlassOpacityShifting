@@ -102,7 +102,7 @@
 
 		// Layers for the overview
 		var layers2 =
-		//de la plus en dessous à la plus au dessus
+		//from the top to the bottom
 		[	new ol.layer.Tile({	source: new ol.source.OSM(),opacity:1}),
 			new ol.layer.Tile({	source: new ol.source.Stamen({layer: 'watercolor'})	, opacity:1 }),
 			new ol.layer.Tile({
@@ -113,7 +113,6 @@
 		];
 		setOVLayer($(".options input"));
 
-		// New control on the map
 		//magnifying glass on the map
 		var ov = new ol.Overlay.Magnify(
 			{	layers: layers2,
@@ -131,15 +130,12 @@
 
 
 		// Options changes
-		//set which layers are visible
-		var nbcouches = 3;
-
+		//function to set which layers are visible
 		function setOVLayer ()
 		{
-			for (i=0; i < nbcouches; i++)
+			for (i=0; i < layers2.length; i++)
 			{
 				if (document.getElementById(i).checked == true){
-					console.log("ICI !!!!!!");
 					layers2[i].setVisible(true);
 				}
 				else {
@@ -151,121 +147,84 @@
 		//initializing for opacity
 		var croissant = false; // decreasing opacity at the beginning
 		var opacite = layers2[1].get("opacity");
-		console.log("opacite",opacite);
 		var step=0.1 ; // step
 
 		//on change le pas lorsque la valeur choisie est différente
 		var OpacityInput = document.getElementById('chgOpacity');
 		function useValue() {
-			step = 0.1*OpacityInput.value/60;
+			step = 0.1*OpacityInput.value/60; //0.1 as the setInterval is 100, 60 to change from sec to minute
 		}
 		OpacityInput.oninput = useValue ;
 
 
 
 
-	//on recupere les couches couchées
+	//list with the number of checked layers
 	list_layers = [] ;
 	var nb = 0 ;//to count nb of layers checked
-	console.log(layers2.length);
 	for (var j=0 ; j<layers2.length;j++){
 		if (document.getElementById(j).checked) {
 			list_layers[nb]=j;
-			console.log(layers2[j].get("source"));
 			nb = nb + 1 ;}
 	}
-	console.log(list_layers);
-	
-		//list_layers=[layer0,layer1,layer2] ; // dans l'ordre de la couche de dessus jsq la couche du dessous
-		var c = 0 ; // pour identifier la couche sur laquelle on fait jouer l'opacité
-	
-			if (list_layers.length<2){
-			clearInterval(Interval);
-		}
-		else {
-			
-		}
+	var c = 0 ; // to identify the layer whom opacity is changing
 		
-		//retourner la liste
+		//change the order of the list
 		t=[];
 		for (var i=0;i<list_layers.length;i++){
 		t[i] =list_layers[list_layers.length-1-i];
 		};
 		list_layers=t;
-		console.log(list_layers);
 		
 
 
 		//function for shifting opacity
-
+		
 		function changeOpacity() {
-		for (var truc=0;truc<2;truc++){console.log("OPACITE",truc,layers2[truc].get("opacity"));};	
-
-		if (list_layers.length<2){
-			//clearInterval(Interval);
-		}
-		else{
-			console.log("i debut",c);
 		opacite = layers2[list_layers[c]].get("opacity"); //on recupere l'opacite de la couche en cours
-		console.log("opacite debut",opacite);
 		changeLayer = false;
 		couche = c;
 		 //decreasing
 		 if (opacite < 1 && croissant == false && opacite > 0) {
-			 console.log("cas 1");
 			 if (opacite>0+step){
 			opacite = opacite - step;}
 			else {opacite = 0; }
 		//increasing
    } else if (opacite < 1 && croissant == true && opacite > 0 ){
-	   console.log("cas 2");
      if (opacite<1-step){
      opacite = opacite + step;}
      else {opacite=1;}
-	
+		//full opacity
 	 } else if (opacite >= 1 ){
-		 console.log("cas 3");
-		console.log("opacite à 1");
-	if (c!=0 && croissant == true){ //si on n'est pas arrivé au bout des couches
-	 couche = c-1 } //on passera à la couche au dessus
-	 else { //si c'était la premiere couche on redescend
-	 croissant = false;
-	 opacite = opacite - step;
-	 console.log("opacite modif depuis 1",opacite);}
-	 
- 		}
- 		//pour eviter l'opacite à 0 pour toutes les couches quand on est arrivé tout en bas
- 		else if (opacite<=step && c==list_layers.length-1){
-			croissant = true;
-			opacite = opacite + step;
+		 //if increasing and not at the end of the layer, changing layer
+		if (c!=0 && croissant == true){
+			couche = c-1 }
+		//if it is the first layer of it we are decreasing
+		else {
+			croissant = false;
+			opacite = opacite - step;}
 		}
- 		
-		else if (opacite <= 0){
-			console.log("cas 4");
-			console.log("len", i,list_layers.length );
-			if (c!=list_layers.length-2 && croissant==false){ //si on n'est pas arrivé au bout des couches
+	else if (opacite <= 0){
+		//if decreasing and not the last layer we can switch layer
+		if (c!=list_layers.length-2 && croissant==false){
 			couche=c+1; 
-			console.log("couche",couche);} // on passera à la couche d'en dessous
-			else { // si c'etait la derniere couche on remonte
+		}
+			//if it is the last layer or if increasing
+			else {
 			croissant = true;
 			opacite = opacite + step;
-			console.log("ici 0");
-		
+			};	
 		};
-			
-		};
-		console.log("opacite",opacite);
 		 layers2[list_layers[c]].setOpacity(opacite);
-		 c=couche ; 
-		 console.log(couche,"coiche");
-		 console.log("i",c);} //on affecte la valeur à la variable globale
+		 c=couche ; //giving value to global variable
+		 
+		 
 	 };
+	 //end of the ChangeOpacity function
 				
 		
-		
 	//calling the function 10 times by second
-	if (list_layers.length >=2){ //si il y a plus d'une couche selectionnees, on joue sur l'opacité
-	var Interval = setInterval(changeOpacity,100);}
+	var Interval = setInterval(changeOpacity,100);
 
 //click allows to hide the magnifying glass
 //hiding also the magnifying frame allows the matching with the magnifying glass
@@ -275,7 +234,7 @@ $("#map").on("click", function()
 	isVisible=false;
 });
 
-//reclick to make the magnifying glass appears
+//click again to make the magnifying glass appears
 $("#map").on("click", function()
 {
 	map.addOverlay(ov2);
