@@ -9,7 +9,8 @@ The shifting of opacity between layers was made for a small project.
 
 How to use it ?
 
-Download the html file and open it in your browser.
+Download the index.html and the js files. Open it in your browser.
+It is made as an API. The version without API is magnifyingGlassOl.html.
 
 
 
